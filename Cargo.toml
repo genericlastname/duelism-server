@@ -2,7 +2,12 @@
 name = "duelism"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "A backend server for hosting a Duelism instance."
+repository = "https://github.com/genericlastname/duelism-server"
 
 [dependencies]
+json = "0.12.4"
+reqwest = "0.11.9"
+rocket = "0.5.0-rc.1"
+wiremock = "0.5"
+url = "2.2.2"
