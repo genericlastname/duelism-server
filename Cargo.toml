@@ -6,8 +6,8 @@ description = "A backend server for hosting a Duelism instance."
 repository = "https://github.com/genericlastname/duelism-server"
 
 [dependencies]
-json = "0.12.4"
-reqwest = "0.11.9"
+futures = "0.3"
+reqwest = { version = "0.11", features = ["json"] }
 rocket = "0.5.0-rc.1"
+tokio = { version = "1.16.0", features = ["full"] }
 wiremock = "0.5"
-url = "2.2.2"
