@@ -1,6 +1,11 @@
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
+pub enum CardType {
+    Monster,
+    SpellTrap,
+}
+
 pub trait CardCollection {
     fn insert_to_db(&self, conn: &Connection);
 }
@@ -13,14 +18,23 @@ pub struct MonsterCardCollection {
 impl CardCollection for MonsterCardCollection {
     fn insert_to_db(&self, conn: &Connection) {
         for mc in &self.data {
-            conn.execute(
-                "INSERT INTO card_images (id, url, url_small)
-                VALUES
-                    (?1, ?2, ?3)",
-                params![mc.card_images[0].id,
+            if mc.card_images.len() > 0 {
+                conn.execute(
+                    "insert into card_images (id, url, url_small)
+                    values
+                        (?1, ?2, ?3)",
+                        params![mc.card_images[0].id,
                         mc.card_images[0].image_url,
                         mc.card_images[0].image_url_small]
-            ).unwrap();
+                ).unwrap();
+            } else {
+                conn.execute(
+                    "insert into card_images (id, url, url_small)
+                    values
+                        (?1, ?2, ?3)",
+                        params![-1, "", ""]
+                ).unwrap();
+            }
             conn.execute(
                 "INSERT INTO monsters (name, kind, desc, atk, def, level, race, image_id)
                 VALUES
@@ -98,11 +112,6 @@ pub struct CardImage {
     id: i32,
     image_url: String,
     image_url_small: String,
-}
-
-impl CardCollection for CardImage {
-    fn insert_to_db(&self, conn: &Connection) {
-    }
 }
 
 pub fn setup_db(conn: &Connection) -> rusqlite::Result<()>  {
