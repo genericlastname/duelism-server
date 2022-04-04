@@ -27,27 +27,20 @@ impl CardCollection for MonsterCardCollection {
                         mc.card_images[0].image_url,
                         mc.card_images[0].image_url_small]
                 ).unwrap();
-            } else {
                 conn.execute(
-                    "insert into card_images (id, url, url_small)
-                    values
-                        (?1, ?2, ?3)",
-                        params![-1, "", ""]
+                    "INSERT INTO monsters (name, kind, desc, atk, def, level, race, image_id)
+                    VALUES
+                        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                    params![mc.name,
+                            mc.kind,
+                            mc.desc,
+                            mc.atk,
+                            mc.def,
+                            mc.level,
+                            mc.race,
+                            mc.card_images[0].id]
                 ).unwrap();
             }
-            conn.execute(
-                "INSERT INTO monsters (name, kind, desc, atk, def, level, race, image_id)
-                VALUES
-                    (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-                params![mc.name,
-                        mc.kind,
-                        mc.desc,
-                        mc.atk,
-                        mc.def,
-                        mc.level,
-                        mc.race,
-                        mc.card_images[0].id]
-            ).unwrap();
         } 
     }
 }

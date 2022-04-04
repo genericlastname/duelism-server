@@ -6,7 +6,9 @@ description = "A backend server for hosting a Duelism instance."
 repository = "https://github.com/genericlastname/duelism-server"
 
 [dependencies]
+env_logger = "0.9"
 futures = "0.3"
+log = "0.4.14"
 reqwest = { version = "0.11", features = ["json"] }
 rusqlite = "0.26.3"
 serde = { version = "1.0", features = ["derive"] }

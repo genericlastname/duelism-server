@@ -1,19 +1,38 @@
 mod carddb;
 
+use log::{debug, error, info};
 use reqwest;
-use reqwest::Url;
+use reqwest::{Response, Url};
 use rusqlite::Connection;
 
 use crate::carddb::{CardCollection, MonsterCardCollection, SpellTrapCardCollection, CardType};
 
-async fn parse_card_data(query: &(CardType, (&str, &str))) {
-
+async fn parse_card_data(
+    query: &(CardType, (&str, &str)),
+    response: Response,
+    conn: &Connection) {
+    match query.0 {
+        CardType::Monster => {
+            let cc = match response.json::<MonsterCardCollection>().await {
+                Ok(parsed) => parsed,
+                Err(e) => panic!("Err {:?}", e),
+            };
+            cc.insert_to_db(conn);
+        }
+        CardType::SpellTrap => {
+            let cc = match response.json::<SpellTrapCardCollection>().await {
+                Ok(parsed) => parsed,
+                Err(e) => panic!("Err {:?}", e),
+            };
+            cc.insert_to_db(conn);
+        }
+    }
 }
 
 #[tokio::main]
 async fn main() {
-    let client = reqwest::Client::new();
     const BASE_URL: &str = "https://db.ygoprodeck.com/api/v7/cardinfo.php";
+    let client = reqwest::Client::new();
     let queries = vec![
         (CardType::Monster, ("type", "Effect Monster")),
         (CardType::Monster, ("type", "Flip Effect Monster")),
@@ -40,15 +59,14 @@ async fn main() {
         (CardType::SpellTrap, ("type", "Spell Card")),
         (CardType::SpellTrap, ("type", "Trap Card"))
     ];
-
-    let mut mcc: carddb::MonsterCardCollection;
-    let mut stcc: carddb::SpellTrapCardCollection;
-
+    info!("Opening DB connection");
     let conn = Connection::open("test.db3").unwrap();
+
     carddb::setup_db(&conn).unwrap();
 
     for query in queries {
         let url = Url::parse_with_params(BASE_URL, &[query.1]).unwrap();
+        info!("Fetching data from {}", &url.as_str());
         let response = client
             .get(url)
             .send()
@@ -57,22 +75,7 @@ async fn main() {
 
         match response.status() {
             reqwest::StatusCode::OK => {
-                match query.0 {
-                    CardType::Monster => {
-                        mcc = match response.json::<MonsterCardCollection>().await {
-                            Ok(parsed) => parsed,
-                            Err(e) => panic!("Err {:?}", e),
-                        };
-                        mcc.insert_to_db(&conn);
-                    }
-                    CardType::SpellTrap => {
-                        stcc = match response.json::<SpellTrapCardCollection>().await {
-                            Ok(parsed) => parsed,
-                            Err(e) => panic!("Err {:?}", e),
-                        };
-                        stcc.insert_to_db(&conn);
-                    }
-                }
+                parse_card_data(&query, response, &conn).await;
             }
             _ => { // Insert statuscode handler here.
             }
